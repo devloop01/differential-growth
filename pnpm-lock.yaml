@@ -5,6 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
+  date-fns:
+    specifier: ^3.0.0
+    version: 3.0.0
   file-saver:
     specifier: ^2.0.5
     version: 2.0.5
@@ -26,6 +29,9 @@ dependencies:
   svg-points:
     specifier: ^6.0.1
     version: 6.0.1
+  tinyqueue:
+    specifier: ^2.0.3
+    version: 2.0.3
 
 devDependencies:
   vite:
@@ -231,6 +237,10 @@ packages:
     requiresBuild: true
     dev: true
     optional: true
+
+  /date-fns@3.0.0:
+    resolution: {integrity: sha512-xjDz3rNN9jp+Lh3P/4MeY4E5HkaRnEnrJCcrdRZnKdn42gJlIe6hwrrwVXePRwVR2kh1UcMnz00erYBnHF8PFA==}
+    dev: false
 
   /esbuild@0.18.20:
     resolution: {integrity: sha512-ceqxoedUrcayh7Y7ZX6NdbbDzGROiyVBgC4PriJThBKSVPWnnFHZAkfI1lJT8QFkOwH4qOS2SJkS4wvpGl8BpA==}
