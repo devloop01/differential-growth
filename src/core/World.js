@@ -53,6 +53,10 @@ export class World {
     this.paths.push(path);
   }
 
+  addPaths(paths) {
+    this.paths.push(...paths);
+  }
+
   clearPaths() {
     this.paths = [];
   }

@@ -1,40 +1,22 @@
 import p5 from "p5";
 import knn from "./lib/knn";
 import { Node } from "./Node";
+import { Bound } from "./Bound";
 
 export class Path {
-  constructor({ p5, nodes, settings } = {}) {
+  constructor({ p5, nodes = [], settings, bound, isClosed = true } = {}) {
     /** @type {p5} */
     this.p5 = p5;
     /** @type {Node[]} */
-    this.nodes = nodes || [];
+    this.nodes = nodes;
     this.settings = settings;
+    /** @type {Bound | undefined} */
+    this.bound = bound;
+    this.isClosed = isClosed;
 
-    this.maxNodes = 1000;
-  }
+    this.lastNodeInjectTime = 0;
 
-  draw() {
-    // this.p5.fill(255);
-    // this.p5.noStroke();
-
-    // this.p5.noFill();
-    // this.p5.stroke(255);
-    // this.p5.strokeWeight(1);
-
-    this.p5.noStroke();
-    this.p5.fill(255);
-
-    this.p5.beginShape();
-    for (let i = 0; i < this.nodes.length; i++) {
-      const node0 = this.nodes[i];
-      const node1 = this.nodes[(i + 1) % this.nodes.length];
-
-      // this.p5.vertex(node0.position.x, node0.position.y);
-      // this.p5.vertex(node1.position.x, node1.position.y);
-
-      this.p5.ellipse(node0.position.x, node0.position.y, 2);
-    }
-    this.p5.endShape(this.p5.CLOSE);
+    this.maxNodes = 2000;
   }
 
   update(tree) {
@@ -42,16 +24,21 @@ export class Path {
       const node = this.nodes[i];
 
       if (this.settings.UseBrownianMotion) this.applyBrownianMotion(i);
-
       this.applyAttraction(i);
       this.applyRepulsion(i, tree);
       this.applyAlignment(i);
+      this.applyBound(i);
 
       node.update();
     }
 
     this.splitEdges();
     this.pruneNodes();
+
+    // if (this.p5.millis() - this.lastNodeInjectTime >= this.settings.NodeInjectionInterval) {
+    //   this.injectNode();
+    //   this.lastNodeInjectTime = this.p5.millis();
+    // }
   }
 
   applyBrownianMotion(index) {
@@ -70,7 +57,7 @@ export class Path {
     let connectedNodes = this.getConnectedNodes(index);
 
     // Move towards next node, if there is one
-    if (connectedNodes.nextNode != undefined && connectedNodes.nextNode instanceof Node) {
+    if (connectedNodes.nextNode !== undefined && !this.nodes[index].isFixed) {
       distance = this.nodes[index].position.dist(connectedNodes.nextNode.position);
       leastMinDistance = Math.min(
         this.nodes[index].minDistance,
@@ -86,7 +73,7 @@ export class Path {
     }
 
     // Move towards previous node, if there is one
-    if (connectedNodes.previousNode != undefined && connectedNodes.previousNode instanceof Node) {
+    if (connectedNodes.previousNode !== undefined && !this.nodes[index].isFixed) {
       distance = this.nodes[index].position.dist(connectedNodes.previousNode.position);
       leastMinDistance = Math.min(
         this.nodes[index].minDistance,
@@ -112,7 +99,6 @@ export class Path {
       undefined,
       this.nodes[index].repulsionRadius
     );
-    // radius must be squared as per https://github.com/mourner/rbush-knn/issues/13
 
     // Move this node away from all nearby neighbors
     // TODO: Make this proportional to distance?
@@ -134,10 +120,9 @@ export class Path {
     let connectedNodes = this.getConnectedNodes(index);
 
     if (
-      connectedNodes.previousNode != undefined &&
-      connectedNodes.previousNode instanceof Node &&
-      connectedNodes.nextNode != undefined &&
-      connectedNodes.nextNode instanceof Node
+      connectedNodes.previousNode !== undefined &&
+      connectedNodes.nextNode !== undefined &&
+      !this.nodes[index].isFixed
     ) {
       // Find the midpoint between the neighbors of this node
       let midpoint = this.getMidpointNode(connectedNodes.previousNode, connectedNodes.nextNode);
@@ -147,14 +132,24 @@ export class Path {
     }
   }
 
+  applyBound(index) {
+    if (
+      this.bound !== undefined &&
+      !this.bound.contains([this.nodes[index].position.x, this.nodes[index].position.y])
+    ) {
+      this.nodes[index].isFixed = true;
+    } else {
+      this.nodes[index].isFixed = false;
+    }
+  }
+
   splitEdges() {
     for (let i = 0; i < this.nodes.length; i++) {
       const node = this.nodes[i];
       let connectedNodes = this.getConnectedNodes(i);
 
       if (
-        connectedNodes.previousNode != undefined &&
-        connectedNodes.previousNode instanceof Node &&
+        connectedNodes.previousNode !== undefined &&
         node.position.dist(connectedNodes.previousNode.position) >= this.settings.MaxDistance
       ) {
         let midpointNode = this.getMidpointNode(node, connectedNodes.previousNode);
@@ -170,9 +165,7 @@ export class Path {
   }
 
   injectNode() {
-    // if (this.nodes.length < this.maxNodes) {
     this.injectRandomNode();
-    // }
   }
 
   injectRandomNode() {
@@ -181,10 +174,8 @@ export class Path {
     let connectedNodes = this.getConnectedNodes(index);
 
     if (
-      connectedNodes.previousNode != undefined &&
-      connectedNodes.previousNode instanceof Node &&
-      connectedNodes.nextNode != undefined &&
-      connectedNodes.nextNode instanceof Node &&
+      connectedNodes.previousNode !== undefined &&
+      connectedNodes.nextNode !== undefined &&
       this.nodes[index].position.dist(connectedNodes.previousNode.position) >
         this.settings.MinDistance
     ) {
@@ -211,8 +202,7 @@ export class Path {
       let connectedNodes = this.getConnectedNodes(i);
 
       if (
-        connectedNodes.previousNode != undefined &&
-        connectedNodes.previousNode instanceof Node &&
+        connectedNodes.previousNode !== undefined &&
         node.position.dist(connectedNodes.previousNode.position) <= this.settings.MinDistance
       ) {
         if (i === 0) {
@@ -229,13 +219,59 @@ export class Path {
   }
 
   getConnectedNodes(index) {
-    let previousNode = this.nodes[(index - 1 + this.nodes.length) % this.nodes.length];
-    let nextNode = this.nodes[(index + 1) % this.nodes.length];
+    let previousNode, nextNode;
+
+    // Find previous node, if there is one
+    if (index === 0 && this.isClosed) {
+      previousNode = this.nodes[this.nodes.length - 1];
+    } else if (index >= 1) {
+      previousNode = this.nodes[index - 1];
+    }
+
+    // Find next node, if there is one
+    if (index === this.nodes.length - 1 && this.isClosed) {
+      nextNode = this.nodes[0];
+    } else if (index <= this.nodes.length - 1) {
+      nextNode = this.nodes[index + 1];
+    }
 
     return {
       previousNode,
       nextNode,
     };
+  }
+
+  draw() {
+    // this.p5.fill(255);
+    // this.p5.noStroke();
+
+    this.p5.noFill();
+    this.p5.stroke(255, 50);
+    this.p5.strokeWeight(1);
+
+    // this.p5.noStroke();
+    // this.p5.fill(255);
+
+    this.p5.beginShape();
+
+    for (let i = 0; i < this.nodes.length - 1; i++) {
+      const node0 = this.nodes[i];
+      const node1 = this.nodes[(i + 1) % this.nodes.length];
+
+      this.p5.vertex(node0.position.x, node0.position.y);
+      this.p5.vertex(node1.position.x, node1.position.y);
+      // this.p5.ellipse(node0.position.x, node0.position.y, 2);
+    }
+
+    this.p5.endShape(this.isClosed ? this.p5.CLOSE : undefined);
+
+    if (this.settings.ShowBound) this.drawBound();
+  }
+
+  drawBound() {
+    if (this.bound !== undefined) {
+      this.bound.draw();
+    }
   }
 
   addNode(node) {
@@ -244,5 +280,25 @@ export class Path {
 
   addNodeAt(node, index) {
     this.nodes.splice(index, 0, node);
+  }
+
+  setBound(bound) {
+    this.bound = bound;
+  }
+
+  toArray() {
+    return this.nodes.map((node) => [node.position.x, node.position.y]);
+  }
+
+  moveTo(xOffset, yOffset) {
+    this.nodes.forEach((node) => {
+      node.position.add(xOffset, yOffset);
+    });
+  }
+
+  scale(factor) {
+    this.nodes.forEach((node) => {
+      node.position.mult(factor);
+    });
   }
 }

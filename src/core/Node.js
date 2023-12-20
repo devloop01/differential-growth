@@ -18,9 +18,7 @@ export class Node {
   }
 
   update() {
-    // this.position.add(this.velocity);
-    // this.velocity.mult(0.1);
-
+    if (this.isFixed) return;
     this.position.lerp(this.nextPosition, this.settings.MaxVelocity);
   }
 

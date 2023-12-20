@@ -4,14 +4,16 @@ import { settings as defaultSettings } from "./core/Settings";
 import { Node } from "./core/Node";
 import { Path } from "./core/Path";
 import { World } from "./core/World";
+import { Bound } from "./core/Bound";
 
 /** @param {p5} p */
 const sketch = (p) => {
   const settings = {
-    dimensions: [p.windowWidth, p.windowHeight],
-    // dimensions: [1080, 1080],
+    // dimensions: [p.windowWidth, p.windowHeight],
+    dimensions: [1080, 1080],
   };
 
+  /** @type {World} */
   let world;
 
   p.setup = () => {
@@ -20,31 +22,131 @@ const sketch = (p) => {
 
     world = new World({ p5: p, settings: defaultSettings });
 
-    const nodesStart = 12;
-    const angInc = p.TWO_PI / nodesStart;
-    const radius = 50;
+    const bound = new Bound({
+      p5: p,
+      polygon: createPolygon(32, 100, p.PI / 4).toArray(),
+    });
 
-    const nodes = [];
-    for (let a = 0; a < p.TWO_PI; a += angInc) {
-      const r = radius + p.random(-radius * 0.1, radius * 0.1);
-      const x = p.width / 2 + p.cos(a) * r;
-      const y = p.height / 2 + p.sin(a) * (r / 4);
-      nodes.push(new Node({ p5: p, x, y, settings: defaultSettings }));
-    }
+    const path0 = createPolygon(3, 50);
+    // path.setBound(bound);
+    const path1 = createPolygon(3, 50);
+    path1.moveTo(100);
+    const path2 = createPolygon(3, 50);
+    path2.moveTo(-100);
+    // world.addPaths([path0, path1, path2]);
 
-    world.addPath(new Path({ p5: p, nodes, settings: defaultSettings }));
+    // const line = createLine(p.width / 2 - 100, p.height / 2, p.width / 2 + 100, p.height / 2);
+    // world.addPath(line);
+
+    // const count = 9;
+    // const maxAmp = 8;
+    // for (let i = 0; i < count; i++) {
+    //   const amp = maxAmp * p.map(i, 0, count, 0, 1);
+    //   const sineWave = createSineWave(64, 200, amp, 0.2);
+    //   sineWave.moveTo(0, maxAmp * count * p.map(i, 0, count, -1, 1));
+    //   world.addPath(sineWave);
+    // }
+
+    resetWorld();
   };
 
   p.draw = () => {
-    p.background(0);
+    p.background(0, 5);
 
     world.update();
     world.draw();
   };
 
-  p.windowResized = () => {
-    p.resizeCanvas(p.windowWidth, p.windowHeight);
+  // p.windowResized = () => {
+  //   p.resizeCanvas(p.windowWidth, p.windowHeight);
+  // };
+
+  let isRecording = false;
+
+  p.keyPressed = () => {
+    if (p.key === "s") {
+      resetWorld();
+      if (isRecording) {
+        world.recorder.stop();
+      } else {
+        world.recorder.start();
+      }
+      isRecording = !isRecording;
+    } else if (p.key === "r") {
+      resetWorld();
+    }
   };
+
+  let intervalId;
+
+  function resetWorld() {
+    world.clearPaths();
+    p.background(0);
+
+    clearInterval(intervalId);
+
+    const circleBound = new Bound({
+      p5: p,
+      polygon: createPolygon(12, p.width / 5, p.PI / 4).toArray(),
+    });
+
+    const count = 4;
+    const lines = [];
+    for (let i = 0; i < count; i++) {
+      const angle = p.map(i, 0, count, 0, p.TWO_PI) + p.PI / 4;
+      const radius = 100;
+      const offset = 20;
+      const x1 = p.cos(angle) * (radius + offset);
+      const y1 = p.sin(angle) * (radius + offset);
+      const x2 = p.cos(angle) * (radius - offset);
+      const y2 = p.sin(angle) * (radius - offset);
+
+      const line = createLine(x1, y1, x2, y2);
+      line.moveTo(p.width / 2, p.height / 2);
+      line.setBound(circleBound);
+      lines.push(line);
+    }
+    world.addPaths(lines);
+
+    intervalId = setTimeout(() => {
+      lines.forEach((line) => {
+        line.setBound(undefined);
+      });
+    }, 6 * 1000);
+  }
+
+  function createPolygon(nodeCount = 3, radius = 50, rotation = 0) {
+    const nodes = [];
+    for (let i = 0; i < nodeCount; i++) {
+      const a = p.map(i, 0, nodeCount, 0, p.TWO_PI) + rotation;
+      const x = p.cos(a) * radius;
+      const y = p.sin(a) * radius;
+      nodes.push(new Node({ p5: p, x, y, settings: defaultSettings }));
+    }
+    const path = new Path({ p5: p, nodes, settings: defaultSettings });
+    path.moveTo(p.width / 2, p.height / 2);
+    return path;
+  }
+
+  function createLine(x1, y1, x2, y2) {
+    let nodes = [];
+    nodes.push(new Node({ p5: p, x: x1, y: y1, settings: defaultSettings }));
+    nodes.push(new Node({ p5: p, x: x2, y: y2, settings: defaultSettings }));
+    const path = new Path({ p5: p, nodes, isClosed: false, settings: defaultSettings });
+    return path;
+  }
+
+  function createSineWave(nodeCount = 100, length = 400, amp = 100, feq = 0.02, phase = 0) {
+    const nodes = [];
+    for (let i = 0; i < nodeCount; i++) {
+      const x = p.map(i, 0, nodeCount, 0, length);
+      const y = p.sin(x * feq + phase) * amp;
+      nodes.push(new Node({ p5: p, x, y, settings: defaultSettings }));
+    }
+    const path = new Path({ p5: p, nodes, isClosed: false, settings: defaultSettings });
+    path.moveTo(p.width / 2 - length / 2, p.height / 2);
+    return path;
+  }
 };
 
 new p5(sketch);
