@@ -2,15 +2,16 @@ import p5 from "p5";
 import inside from "point-in-polygon";
 
 export class Bound {
-  constructor({ p5, polygon }) {
+  constructor({ p5, polygon, reverse = false }) {
     /** @type {p5} */
     this.p5 = p5;
     this.polygon = polygon;
+    this.reverse = reverse;
   }
 
   /** @param {number[]} point */
   contains(point) {
-    return inside(point, this.polygon);
+    return this.reverse ? !inside(point, this.polygon) : inside(point, this.polygon);
   }
 
   draw() {

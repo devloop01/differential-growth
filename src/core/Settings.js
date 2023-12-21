@@ -24,7 +24,7 @@ export const settings = {
   ...defaultSettings,
   MinDistance: 2,
   MaxDistance: 6,
-  RepulsionRadius: 9,
+  RepulsionRadius: 10,
   MaxVelocity: 0.2,
   AttractionForce: 0.4,
   RepulsionForce: 0.7,
@@ -36,5 +36,5 @@ export const settings = {
   InvertedColors: false,
   DebugMode: false,
   FillMode: false,
-  ShowBound: false,
+  // ShowBound: false,
 };

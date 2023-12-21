@@ -3,20 +3,34 @@ import knn from "./lib/knn";
 import { Node } from "./Node";
 import { Bound } from "./Bound";
 
+function getPointOnCurve(p0, p1, p2, p3, t) {
+  let v0 = (p2 - p0) * 0.5;
+  let v1 = (p3 - p1) * 0.5;
+  let t2 = t * t;
+  let t3 = t * t * t;
+
+  let c0 = 2 * t3 - 3 * t2 + 1;
+  let c1 = t3 - 2 * t2 + t;
+  let c2 = -2 * t3 + 3 * t2;
+  let c3 = t3 - t2;
+
+  return c0 * p1 + c1 * v0 + c2 * p2 + c3 * v1;
+}
+
 export class Path {
-  constructor({ p5, nodes = [], settings, bound, isClosed = true } = {}) {
+  constructor({ p5, nodes = [], settings, bounds = [], isClosed = true } = {}) {
     /** @type {p5} */
     this.p5 = p5;
     /** @type {Node[]} */
     this.nodes = nodes;
     this.settings = settings;
-    /** @type {Bound | undefined} */
-    this.bound = bound;
+    /** @type {Bound[]} */
+    this.bounds = bounds;
     this.isClosed = isClosed;
 
     this.lastNodeInjectTime = 0;
 
-    this.maxNodes = 2000;
+    this.maxNodes = 200;
   }
 
   update(tree) {
@@ -27,7 +41,7 @@ export class Path {
       this.applyAttraction(i);
       this.applyRepulsion(i, tree);
       this.applyAlignment(i);
-      this.applyBound(i);
+      this.applyBounds(i);
 
       node.update();
     }
@@ -132,14 +146,17 @@ export class Path {
     }
   }
 
-  applyBound(index) {
-    if (
-      this.bound !== undefined &&
-      !this.bound.contains([this.nodes[index].position.x, this.nodes[index].position.y])
-    ) {
-      this.nodes[index].isFixed = true;
-    } else {
-      this.nodes[index].isFixed = false;
+  applyBounds(index) {
+    if (this.bounds !== undefined) {
+      const isValid = this.bounds.some(
+        (bound) => !bound.contains([this.nodes[index].position.x, this.nodes[index].position.y])
+      );
+
+      if (isValid) {
+        this.nodes[index].isFixed = true;
+      } else {
+        this.nodes[index].isFixed = false;
+      }
     }
   }
 
@@ -247,30 +264,39 @@ export class Path {
 
     this.p5.noFill();
     this.p5.stroke(255, 50);
+    this.p5.stroke(255);
     this.p5.strokeWeight(1);
 
     // this.p5.noStroke();
     // this.p5.fill(255);
 
     this.p5.beginShape();
-
     for (let i = 0; i < this.nodes.length - 1; i++) {
-      const node0 = this.nodes[i];
-      const node1 = this.nodes[(i + 1) % this.nodes.length];
+      let n0 = this.nodes[i > 0 ? i - 1 : i];
+      let n1 = this.nodes[i];
+      let n2 = this.nodes[i + 1];
+      let n3 = this.nodes[i + 2 < this.nodes.length ? i + 2 : this.nodes.length - 1];
 
-      this.p5.vertex(node0.position.x, node0.position.y);
-      this.p5.vertex(node1.position.x, node1.position.y);
+      for (let t = 0; t <= 1; t += 0.1) {
+        let x = getPointOnCurve(n0.position.x, n1.position.x, n2.position.x, n3.position.x, t);
+        let y = getPointOnCurve(n0.position.y, n1.position.y, n2.position.y, n3.position.y, t);
+        this.p5.curveVertex(x, y);
+      }
+
+      // this.p5.curveVertex(node0.position.x, node0.position.y);
       // this.p5.ellipse(node0.position.x, node0.position.y, 2);
     }
 
     this.p5.endShape(this.isClosed ? this.p5.CLOSE : undefined);
 
-    if (this.settings.ShowBound) this.drawBound();
+    if (this.settings.ShowBound) this.drawBounds();
   }
 
-  drawBound() {
-    if (this.bound !== undefined) {
-      this.bound.draw();
+  drawBounds() {
+    if (this.bounds !== undefined) {
+      this.bounds.forEach((bound) => {
+        bound.draw();
+      });
     }
   }
 
@@ -282,8 +308,12 @@ export class Path {
     this.nodes.splice(index, 0, node);
   }
 
-  setBound(bound) {
-    this.bound = bound;
+  addBound(bound) {
+    this.bounds.push(bound);
+  }
+
+  addBounds(bounds) {
+    this.bounds.push(...bounds);
   }
 
   toArray() {
