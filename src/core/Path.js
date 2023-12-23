@@ -266,8 +266,8 @@ export class Path {
 
   draw() {
     this.p5.noFill();
-    this.p5.strokeWeight(1);
-    this.p5.stroke(255, 30);
+    this.p5.strokeWeight(2);
+    this.p5.stroke(255, 150);
     // this.p5.stroke(`hsla(${this.colorOffset + (this.p5.frameCount % 155)}, 100%, 50%, 0.05)`);
 
     // this.p5.noStroke();
@@ -281,12 +281,12 @@ export class Path {
       // let n3 = this.nodes[i + 2 < this.nodes.length ? i + 2 : this.nodes.length - 1];
 
       // for (let t = 0; t <= 1; t += 0.1) {
-      //   let x = getPointOnCurve(n0.position.x, n1.position.x, n2.position.x, n3.position.x, t);
-      //   let y = getPointOnCurve(n0.position.y, n1.position.y, n2.position.y, n3.position.y, t);
-      //   this.p5.curveVertex(x, y);
+      // let x = getPointOnCurve(n0.position.x, n1.position.x, n2.position.x, n3.position.x, t);
+      // let y = getPointOnCurve(n0.position.y, n1.position.y, n2.position.y, n3.position.y, t);
+      // this.p5.curveVertex(x, y);
       // }
 
-      this.p5.curveVertex(n0.position.x, n0.position.y);
+      this.p5.vertex(n0.position.x, n0.position.y);
       // this.p5.ellipse(n0.position.x, n0.position.y, 2);
     }
 

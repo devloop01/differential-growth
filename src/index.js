@@ -26,10 +26,10 @@ const sketch = (p) => {
   };
 
   p.draw = () => {
-    p.background(0, 4);
+    p.background(0, 10);
     // p.background(0);
 
-    world.update();
+    if (p.frameCount > 80) world.update();
     world.draw();
   };
 
@@ -57,41 +57,44 @@ const sketch = (p) => {
 
   let intervals = [];
   function resetWorld() {
-    world.clearPaths();
+    p.frameCount = 0;
     p.background(0);
+
+    world.clearPaths();
 
     intervals.forEach((id) => clearInterval(id));
 
     const bound = new Bound({
       p5: p,
-      polygon: createPolygon(4, p.width / 2.5, p.PI / 4).toArray(),
+      polygon: createPolygon(128, p.width / 3).toArray(),
     });
 
-    const circle1 = createPolygon(128, p.width / 8, p.PI / 4);
-    circle1.moveTo(0, -p.width / 7);
-    circle1.addBound(bound);
-    world.addPath(circle1);
+    const c0 = createPolygon(128, p.width / 3);
+    c0.addBound(bound);
+    world.addPath(c0);
 
-    const circle2 = createPolygon(128, p.width / 8, p.PI / 4);
-    circle2.moveTo(0, p.width / 7);
-    circle2.addBound(bound);
-    world.addPath(circle2);
+    const c1 = createPolygon(128, p.width / 16);
+    c1.moveTo(-p.width / 8, -p.width / 9);
+    c1.addBound(bound);
+    world.addPath(c1);
 
-    const circle3 = createPolygon(128, p.width / 12, p.PI / 4);
-    circle3.moveTo(-p.width / 5.5, 0);
-    circle3.addBound(bound);
-    world.addPath(circle3);
+    const c2 = createPolygon(128, p.width / 16);
+    c2.moveTo(p.width / 8, -p.width / 9);
+    c2.addBound(bound);
+    world.addPath(c2);
 
-    const circle4 = createPolygon(128, p.width / 12, p.PI / 4);
-    circle4.moveTo(p.width / 5.5, 0);
-    circle4.addBound(bound);
-    world.addPath(circle4);
+    const smile = createSineWave(128, p.width / 4, p.width / 12, 0.01, p.PI * 0.08);
+    smile.moveTo(0, p.width / 8);
+    smile.addBound(bound);
+    world.addPath(smile);
 
     intervals = [
       setTimeout(() => {
-        circle1.clearBounds();
-        circle2.clearBounds();
-      }, 14 * 1000),
+        c0.clearBounds();
+        c1.clearBounds();
+        c2.clearBounds();
+        smile.clearBounds();
+      }, 12 * 1000),
     ];
   }
 

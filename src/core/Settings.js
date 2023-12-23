@@ -22,13 +22,13 @@ export const defaultSettings = {
 
 export const settings = {
   ...defaultSettings,
-  MinDistance: 4,
-  MaxDistance: 9,
-  RepulsionRadius: 16,
-  MaxVelocity: 0.16,
+  MinDistance: 5,
+  MaxDistance: 11,
+  RepulsionRadius: 20,
+  MaxVelocity: 0.18,
   AttractionForce: 0.3,
   RepulsionForce: 0.9,
-  AlignmentForce: 0.4,
+  AlignmentForce: 0.45,
   NodeInjectionInterval: 100,
   BrownianMotionRange: 0.05,
   DrawNodes: false,
