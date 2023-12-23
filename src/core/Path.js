@@ -28,12 +28,18 @@ export class Path {
     this.bounds = bounds;
     this.isClosed = isClosed;
 
+    this.colorOffset = this.p5.floor(this.p5.random(0, 100));
+
+    this.isPaused = false;
+
     this.lastNodeInjectTime = 0;
 
-    this.maxNodes = 2000;
+    this.maxNodes = 4000;
   }
 
   update(tree) {
+    if (this.isPaused) return;
+
     for (let i = 0; i < this.nodes.length; i++) {
       const node = this.nodes[i];
 
@@ -259,14 +265,10 @@ export class Path {
   }
 
   draw() {
-    // this.p5.fill(255);
-    // this.p5.noStroke();
-
     this.p5.noFill();
-    this.p5.stroke(255, 30);
-    // this.p5.stroke(`hsla(${100 + (this.p5.frameCount % 155)}, 100%, 50%, 0.05)`);
-    // this.p5.stroke(255);
     this.p5.strokeWeight(1);
+    this.p5.stroke(255, 30);
+    // this.p5.stroke(`hsla(${this.colorOffset + (this.p5.frameCount % 155)}, 100%, 50%, 0.05)`);
 
     // this.p5.noStroke();
     // this.p5.fill(255);

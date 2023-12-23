@@ -22,10 +22,10 @@ export const defaultSettings = {
 
 export const settings = {
   ...defaultSettings,
-  MinDistance: 2,
-  MaxDistance: 7,
-  RepulsionRadius: 10,
-  MaxVelocity: 0.17,
+  MinDistance: 4,
+  MaxDistance: 9,
+  RepulsionRadius: 16,
+  MaxVelocity: 0.16,
   AttractionForce: 0.3,
   RepulsionForce: 0.9,
   AlignmentForce: 0.4,

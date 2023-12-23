@@ -26,7 +26,7 @@ const sketch = (p) => {
   };
 
   p.draw = () => {
-    p.background(0, 7);
+    p.background(0, 4);
     // p.background(0);
 
     world.update();
@@ -55,59 +55,56 @@ const sketch = (p) => {
     }
   };
 
-  let intervalId;
+  let intervals = [];
   function resetWorld() {
     world.clearPaths();
     p.background(0);
 
-    clearInterval(intervalId);
+    intervals.forEach((id) => clearInterval(id));
 
-    const bigBound = new Bound({
+    const bound = new Bound({
       p5: p,
-      polygon: createPolygon(3, p.width / 2.4, p.PI / 6).toArray(),
-    });
-    const smallBound = new Bound({
-      p5: p,
-      polygon: createPolygon(3, p.width / 12, p.PI / 6).toArray(),
-      reverse: true,
+      polygon: createPolygon(4, p.width / 2.5, p.PI / 4).toArray(),
     });
 
-    const count = 6;
-    const lines = [];
-    for (let i = 0; i < count; i++) {
-      const angle = p.map(i, 0, count, 0, p.TWO_PI) + p.PI / 6;
-      const radius = 150;
-      const length = 10;
-      const x1 = p.cos(angle) * (radius + length);
-      const y1 = p.sin(angle) * (radius + length);
-      const x2 = p.cos(angle) * (radius - length);
-      const y2 = p.sin(angle) * (radius - length);
+    const circle1 = createPolygon(128, p.width / 8, p.PI / 4);
+    circle1.moveTo(0, -p.width / 7);
+    circle1.addBound(bound);
+    world.addPath(circle1);
 
-      const line = createLine(x1, y1, x2, y2);
-      line.moveTo(p.width / 2, p.height / 2);
-      line.moveTo(0, 100);
-      line.addBounds([smallBound, bigBound]);
-      lines.push(line);
-    }
-    world.addPaths(lines);
+    const circle2 = createPolygon(128, p.width / 8, p.PI / 4);
+    circle2.moveTo(0, p.width / 7);
+    circle2.addBound(bound);
+    world.addPath(circle2);
 
-    intervalId = setTimeout(() => {
-      lines.forEach((line) => {
-        line.clearBounds();
-      });
-    }, 15 * 1000);
+    const circle3 = createPolygon(128, p.width / 12, p.PI / 4);
+    circle3.moveTo(-p.width / 5.5, 0);
+    circle3.addBound(bound);
+    world.addPath(circle3);
+
+    const circle4 = createPolygon(128, p.width / 12, p.PI / 4);
+    circle4.moveTo(p.width / 5.5, 0);
+    circle4.addBound(bound);
+    world.addPath(circle4);
+
+    intervals = [
+      setTimeout(() => {
+        circle1.clearBounds();
+        circle2.clearBounds();
+      }, 14 * 1000),
+    ];
   }
 
-  function createPolygon(nodeCount = 3, radius = 50, rotation = 0) {
+  function createPolygon(nodeCount = 3, radius = 50, rotation = 0, settings = {}) {
     const nodes = [];
     for (let i = 0; i < nodeCount; i++) {
       const a = p.map(i, 0, nodeCount, 0, p.TWO_PI) + rotation;
       const x = p.cos(a) * radius;
       const y = p.sin(a) * radius;
-      nodes.push(new Node({ p5: p, x, y, settings: defaultSettings }));
+      nodes.push(new Node({ p5: p, x, y, settings: { ...defaultSettings, ...settings } }));
     }
-    const path = new Path({ p5: p, nodes, settings: defaultSettings });
-    path.moveTo(p.width / 2, p.height / 2 + 100);
+    const path = new Path({ p5: p, nodes, settings: { ...defaultSettings, ...settings } });
+    path.moveTo(p.width / 2, p.height / 2);
     return path;
   }
 
