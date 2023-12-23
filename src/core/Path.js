@@ -30,7 +30,7 @@ export class Path {
 
     this.lastNodeInjectTime = 0;
 
-    this.maxNodes = 200;
+    this.maxNodes = 2000;
   }
 
   update(tree) {
@@ -263,8 +263,9 @@ export class Path {
     // this.p5.noStroke();
 
     this.p5.noFill();
-    this.p5.stroke(255, 50);
-    this.p5.stroke(255);
+    this.p5.stroke(255, 30);
+    // this.p5.stroke(`hsla(${100 + (this.p5.frameCount % 155)}, 100%, 50%, 0.05)`);
+    // this.p5.stroke(255);
     this.p5.strokeWeight(1);
 
     // this.p5.noStroke();
@@ -273,18 +274,18 @@ export class Path {
     this.p5.beginShape();
     for (let i = 0; i < this.nodes.length - 1; i++) {
       let n0 = this.nodes[i > 0 ? i - 1 : i];
-      let n1 = this.nodes[i];
-      let n2 = this.nodes[i + 1];
-      let n3 = this.nodes[i + 2 < this.nodes.length ? i + 2 : this.nodes.length - 1];
+      // let n1 = this.nodes[i];
+      // let n2 = this.nodes[i + 1];
+      // let n3 = this.nodes[i + 2 < this.nodes.length ? i + 2 : this.nodes.length - 1];
 
-      for (let t = 0; t <= 1; t += 0.1) {
-        let x = getPointOnCurve(n0.position.x, n1.position.x, n2.position.x, n3.position.x, t);
-        let y = getPointOnCurve(n0.position.y, n1.position.y, n2.position.y, n3.position.y, t);
-        this.p5.curveVertex(x, y);
-      }
+      // for (let t = 0; t <= 1; t += 0.1) {
+      //   let x = getPointOnCurve(n0.position.x, n1.position.x, n2.position.x, n3.position.x, t);
+      //   let y = getPointOnCurve(n0.position.y, n1.position.y, n2.position.y, n3.position.y, t);
+      //   this.p5.curveVertex(x, y);
+      // }
 
-      // this.p5.curveVertex(node0.position.x, node0.position.y);
-      // this.p5.ellipse(node0.position.x, node0.position.y, 2);
+      this.p5.curveVertex(n0.position.x, n0.position.y);
+      // this.p5.ellipse(n0.position.x, n0.position.y, 2);
     }
 
     this.p5.endShape(this.isClosed ? this.p5.CLOSE : undefined);
@@ -314,6 +315,10 @@ export class Path {
 
   addBounds(bounds) {
     this.bounds.push(...bounds);
+  }
+
+  clearBounds() {
+    this.bounds = [];
   }
 
   toArray() {

@@ -14,6 +14,8 @@ export class World {
 
     this.lastNodeInjectTime = 0;
 
+    this.isPaused = false;
+
     this.tree = new MyRBush(9); // holds nodes
     this.buildTree();
 
@@ -29,6 +31,8 @@ export class World {
   }
 
   update() {
+    if (this.isPaused) return;
+
     this.buildTree();
 
     this.paths.forEach((path) => {
@@ -59,6 +63,18 @@ export class World {
 
   clearPaths() {
     this.paths = [];
+  }
+
+  pause() {
+    this.isPaused = true;
+  }
+
+  resume() {
+    this.isPaused = false;
+  }
+
+  togglePause() {
+    this.isPaused = !this.isPaused;
   }
 }
 

@@ -9,8 +9,8 @@ import { Bound } from "./core/Bound";
 /** @param {p5} p */
 const sketch = (p) => {
   const settings = {
-    dimensions: [p.windowWidth, p.windowHeight],
-    // dimensions: [1080, 1080],
+    // dimensions: [p.windowWidth, p.windowHeight],
+    dimensions: [1080, 1080],
   };
 
   /** @type {World} */
@@ -26,8 +26,8 @@ const sketch = (p) => {
   };
 
   p.draw = () => {
-    // p.background(0, 5);
-    p.background(0);
+    p.background(0, 7);
+    // p.background(0);
 
     world.update();
     world.draw();
@@ -50,6 +50,8 @@ const sketch = (p) => {
       isRecording = !isRecording;
     } else if (p.key === "r") {
       resetWorld();
+    } else if (p.key === " ") {
+      world.togglePause();
     }
   };
 
@@ -63,7 +65,7 @@ const sketch = (p) => {
 
     const bigBound = new Bound({
       p5: p,
-      polygon: createPolygon(12, p.width / 3, p.PI / 6).toArray(),
+      polygon: createPolygon(3, p.width / 2.4, p.PI / 6).toArray(),
     });
     const smallBound = new Bound({
       p5: p,
@@ -71,10 +73,10 @@ const sketch = (p) => {
       reverse: true,
     });
 
-    const count = 4;
+    const count = 6;
     const lines = [];
     for (let i = 0; i < count; i++) {
-      const angle = p.map(i, 0, count, 0, p.TWO_PI) + p.PI / 4;
+      const angle = p.map(i, 0, count, 0, p.TWO_PI) + p.PI / 6;
       const radius = 150;
       const length = 10;
       const x1 = p.cos(angle) * (radius + length);
@@ -84,16 +86,17 @@ const sketch = (p) => {
 
       const line = createLine(x1, y1, x2, y2);
       line.moveTo(p.width / 2, p.height / 2);
-      line.addBounds([bigBound]);
+      line.moveTo(0, 100);
+      line.addBounds([smallBound, bigBound]);
       lines.push(line);
     }
     world.addPaths(lines);
 
-    // intervalId = setTimeout(() => {
-    //   lines.forEach((line) => {
-    //     line.addBound(undefined);
-    //   });
-    // }, 6 * 1000);
+    intervalId = setTimeout(() => {
+      lines.forEach((line) => {
+        line.clearBounds();
+      });
+    }, 15 * 1000);
   }
 
   function createPolygon(nodeCount = 3, radius = 50, rotation = 0) {
@@ -105,7 +108,7 @@ const sketch = (p) => {
       nodes.push(new Node({ p5: p, x, y, settings: defaultSettings }));
     }
     const path = new Path({ p5: p, nodes, settings: defaultSettings });
-    path.moveTo(p.width / 2, p.height / 2);
+    path.moveTo(p.width / 2, p.height / 2 + 100);
     return path;
   }
 
