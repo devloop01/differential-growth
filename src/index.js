@@ -56,7 +56,6 @@ const sketch = (p) => {
   };
 
   let intervalId;
-
   function resetWorld() {
     world.clearPaths();
     p.background(0);
